@@ -10,6 +10,7 @@ trait Day(day: Int) {
     println(answer1())
     print(answer2())
 
-  def readData() =
-    Source.fromFile(s"resources/day_$day.txt")
+  def readData(test: Boolean = false) =
+    val prefix = if test then "_test" else ""
+    Source.fromFile(s"resources/day_$day$prefix.txt")
 }
