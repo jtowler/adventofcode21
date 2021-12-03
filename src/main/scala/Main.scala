@@ -1,3 +1,3 @@
 object Main extends App {
-  Day2().display()
+  Day3().display()
 }
