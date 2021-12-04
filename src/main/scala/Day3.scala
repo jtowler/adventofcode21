@@ -6,8 +6,7 @@ class Day3 extends Day(3) {
 
   override def answer1(): Any =
     val s = List.range(0, numLength).map({ pos =>
-      val b = data.map(x => x(pos)).count(_ == '1')
-      if b > numEntries / 2 then 1 else 0
+      if data.count(_ (pos) == '1') > numEntries / 2 then 1 else 0
     })
     val s2 = s.map {
       _ match
@@ -21,8 +20,8 @@ class Day3 extends Day(3) {
       if data.size == 1 then
         Integer.parseInt(data(0).mkString, 2)
       else {
-        val ones = data.map(_ (pos)).count(_ == '1')
-        val zeros = data.map(_ (pos)).count(_ == '0')
+        val ones = data.count(_ (pos) == '1')
+        val zeros = data.count(_ (pos) == '0')
         val mostCommon = if func(ones, zeros) then '1' else '0'
         loop(data.filter(_ (pos) == mostCommon), pos + 1, func)
       }
