@@ -1,8 +1,7 @@
 class Day8 extends Day(8) {
 
-  val data = readData().getLines().map(_.split(""" \| """)).toList
-  val easy = data.map(_(1).split(" ").map(_.toCharArray.sorted.toList))
-  val hard = data.map(_(0).split(" ").map(_.toCharArray.sorted.toList))
+  private val data = readData().getLines().map(_.split(""" \| """)).toList
+  private val easy = data.map(_(1).split(" ").map(_.toCharArray.sorted.toList))
 
   override def answer1(): Any = easy.map(line => line.count(List(2, 3, 4, 7) contains _.size)).sum
 
@@ -27,6 +26,7 @@ class Day8 extends Day(8) {
       seven -> '7', eight -> '8', nine -> '9', zero -> '0')
 
   override def answer2(): Any =
+    val hard = data.map(_(0).split(" ").map(_.toCharArray.sorted.toList))
     val disps = easy zip hard.map(determineVals)
     disps.map { (disp, seg) => disp.map { seg(_)}.mkString.toInt}.sum
 }
