@@ -22,7 +22,6 @@ class Day9 extends Day(9) {
     else
       getBasin(currBasin ++ allNewAdj)
 
-
   private def answer[T](filtFun: (Int, Int) => Boolean, yieldFun: (Int, Int) => T): Seq[T] =
     for {
       x <- data.indices
