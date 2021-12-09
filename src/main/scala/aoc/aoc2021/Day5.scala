@@ -1,3 +1,7 @@
+package aoc.aoc2021
+
+import aoc.Day
+
 case class Line (x1: Int, y1: Int, x2: Int, y2: Int) {
 
   def line(a: Int, b: Int): Range = a to b by (if (a > b) -1 else 1)
@@ -12,7 +16,7 @@ case class Line (x1: Int, y1: Int, x2: Int, y2: Int) {
 }
 
 
-class Day5 extends Day(5) {
+class Day5 extends Day(5, 2021) {
   val pattern = """(\d+),(\d+) -> (\d+),(\d+)""".r
   val data = readData().getLines().map{ s =>
     val pattern(x1, y1, x2, y2) = s

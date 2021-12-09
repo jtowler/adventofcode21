@@ -1,6 +1,10 @@
+package aoc.aoc2021
+
+import aoc.Day
+
 import scala.annotation.tailrec
 
-class Day9 extends Day(9) {
+class Day9 extends Day(9, 2021) {
 
   private val data = readData().getLines().map(_.toCharArray.map(_.asDigit).toList).toList
 

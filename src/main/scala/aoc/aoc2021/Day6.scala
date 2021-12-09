@@ -1,4 +1,8 @@
-class Day6 extends Day(6) {
+package aoc.aoc2021
+
+import aoc.Day
+
+class Day6 extends Day(6, 2021) {
 
   val data = readData().getLines().toList(0).split(",").map(_.toInt).toList
   val fish: Map[Int, BigInt] = (0 to 8).map(k => (k, BigInt(data.count(_ == k)))).toMap

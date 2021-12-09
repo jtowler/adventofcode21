@@ -1,6 +1,8 @@
+package aoc
+
 import scala.io.{BufferedSource, Source}
 
-trait Day(day: Int) {
+trait Day(day: Int, year: Int) {
 
   def answer1(): Any
 
@@ -16,5 +18,5 @@ trait Day(day: Int) {
       case (true, _) => "_test"
       case _ => ""
     }
-    Source.fromFile(s"resources/day_$day$suffix.txt")
+    Source.fromFile(s"resources/$year/day_$day$suffix.txt")
 }

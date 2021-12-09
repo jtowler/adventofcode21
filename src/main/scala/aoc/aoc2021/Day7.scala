@@ -1,4 +1,8 @@
-class Day7 extends Day(7) {
+package aoc.aoc2021
+
+import aoc.Day
+
+class Day7 extends Day(7, 2021) {
 
   val data = readData().getLines().toList(0).split(",").map(_.toInt).toList
 
