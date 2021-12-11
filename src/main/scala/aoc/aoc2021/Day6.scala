@@ -4,22 +4,16 @@ import aoc.Day
 
 class Day6 extends Day(6, 2021) {
 
-  val data = readData().getLines().toList(0).split(",").map(_.toInt).toList
+  val data: List[Int] = readData().getLines().toList.head.split(",").map(_.toInt).toList
   val fish: Map[Int, BigInt] = (0 to 8).map(k => (k, BigInt(data.count(_ == k)))).toMap
 
-  def update(fish: Map[Int, BigInt], day: Int, endDay: Int): BigInt =
-    if day == endDay then fish.values.sum
-    else
-      val newerMap: Map[Int, BigInt] = (0 to 8).toList.map { n =>
-        n match {
-          case 6 => 6 -> (fish(7) + fish(0))
-          case 8 => 8 -> fish(0)
-          case _ => n -> fish(n + 1)
-        }
-      }.toMap
-      update(newerMap, day + 1, endDay)
+  def update(day: Int): BigInt = (0 until day).foldLeft(fish)((f, _) => (0 to 8).toList.map {
+    case 6 => 6 -> (f(7) + f(0))
+    case 8 => 8 -> f(0)
+    case n => n -> f(n + 1)
+  }.toMap).values.sum
 
-  override def answer1(): Any = update(fish, 0, 80)
+  override def answer1(): Any = update(80)
 
-  override def answer2(): Any = update(fish, 0, 256)
+  override def answer2(): Any = update(256)
 }
