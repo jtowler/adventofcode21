@@ -1,5 +1,5 @@
-import aoc.aoc2021.{Day13 => Day}
+import aoc.aoc2021.{Day14 => Today}
 
 object Main extends App {
-  Day().display()
+  Today().display()
 }

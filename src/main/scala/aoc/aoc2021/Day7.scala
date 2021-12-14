@@ -4,7 +4,7 @@ import aoc.Day
 
 class Day7 extends Day(7, 2021) {
 
-  val data = readData().getLines().toList(0).split(",").map(_.toInt).toList
+  private val data = readData().getLines().toList.head.split(",").map(_.toInt).toList
 
   def answer(f: Int => Int): Int = (data.min to data.max).map { i =>
     data.map(x => f((x - i).abs)).sum
