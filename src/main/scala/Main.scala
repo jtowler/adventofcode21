@@ -1,5 +1,4 @@
-import aoc.aoc2021.{Day14 => Today}
+import aoc.aoc2021.{Day15 => Today}
 
-object Main extends App {
-  Today().display()
-}
+@main
+def main(): Unit = Today().display()

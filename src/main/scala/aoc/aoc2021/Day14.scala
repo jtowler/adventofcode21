@@ -4,8 +4,6 @@ import aoc.Day
 
 type Pair = (Char, Char)
 
-import scala.annotation.tailrec
-
 case class Polymer(pairs: Map[Pair, BigInt], counts: Map[Char, BigInt]) {
 
   def score(): BigInt = counts.maxBy(_._2)._2 - counts.minBy(_._2)._2
