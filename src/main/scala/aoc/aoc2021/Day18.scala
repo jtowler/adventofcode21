@@ -2,135 +2,166 @@ package aoc.aoc2021
 
 import aoc.Day
 
+import java.lang.RuntimeException
 import scala.annotation.tailrec
-import scala.util.matching.Regex
+
+sealed trait SnailNumber {
+  val path: List[Boolean]
+
+  def getMag: Int
+
+  def increment(direction: Boolean): SnailNumber = this match {
+    case Leaf(value, path) => Leaf(value, direction :: path)
+    case Split(left, right, path) => Split(left.increment(direction), right.increment(direction), direction :: path)
+  }
+
+  def +(that: SnailNumber): Split = Split(this.increment(true), that.increment(false), path)
+
+  @tailrec
+  final def getFromPath(path: List[Boolean]): SnailNumber = (this, path) match {
+    case (s, Nil) => s
+    case (p: Split, true :: t) => p.left.getFromPath(t)
+    case (p: Split, false :: t) => p.right.getFromPath(t)
+    case _ => throw RuntimeException("Malformed Path")
+  }
+}
+
+case class Leaf(value: Int, path: List[Boolean] = List()) extends SnailNumber {
+  override def toString: String = s"$value"
+
+  def +(that: Int): Leaf = Leaf(value + that, path)
+
+  def getMag: Int = value
+
+  def split: Split =
+    val n1 = value / 2
+    val n2 = if value % 2 == 0 then n1 else n1 + 1
+    Split(Leaf(n1, path :+ true), Leaf(n2, path :+ false), path)
+}
+
+case class Split(left: SnailNumber, right: SnailNumber, path: List[Boolean] = List()) extends SnailNumber {
+  override def toString: String = s"[$left,$right]"
+
+  def getMag: Int = 3 * left.getMag + 2 * right.getMag
+
+  def get4Deep: Option[Split] = (left, right) match {
+    case (l: Leaf, r: Leaf) if path.size >= 4 => Some(this)
+    case (p: Split, _) if p.get4Deep.isDefined => p.get4Deep
+    case (_, p: Split) if p.get4Deep.isDefined => p.get4Deep
+    case _ => None
+  }
+
+  def get10: Option[Leaf] = (left, right) match {
+    case (l: Leaf, _) if l.value >= 10 => Some(l)
+    case (p: Split, _) if p.get10.isDefined => p.get10
+    case (_, r: Leaf) if r.value >= 10 => Some(r)
+    case (_, p: Split) if p.get10.isDefined => p.get10
+    case _ => None
+  }
+
+  @tailrec
+  final def reduce: Split =
+    get4Deep match {
+      case Some(p) => explode(p).reduce
+      case None => get10 match {
+        case Some(l) => split(l).reduce
+        case None => this
+      }
+    }
+
+  def split(toSplit: Leaf): Split = replace(toSplit.split, toSplit.path).asInstanceOf[Split]
+
+  def explode(toExplode: Split): Split =
+    val (lVal: Int, rVal: Int) = (toExplode.left, toExplode.right) match {
+      case (l: Leaf, r: Leaf) => (l.value, r.value)
+      case _ => throw RuntimeException("Exploding non base Pair")
+    }
+    val replacedLeft: Split = getLeft(toExplode.path) match {
+      case Some(leaf) => replace(leaf + lVal, leaf.path).asInstanceOf[Split]
+      case None => this
+    }
+    val replacedRight: Split = getRight(toExplode.path) match {
+      case Some(leaf) => replacedLeft.replace(leaf + rVal, leaf.path).asInstanceOf[Split]
+      case None => replacedLeft
+    }
+    replacedRight.replace(Leaf(0, toExplode.path), toExplode.path).asInstanceOf[Split]
+
+  def replace(replaceWith: SnailNumber, replacePath: List[Boolean]): SnailNumber = (left, right, replacePath) match {
+    case (_, _, Nil) => replaceWith
+    case (l: Leaf, r, true :: Nil) => Split(replaceWith, r, path)
+    case (l, r: Leaf, false :: Nil) => Split(l, replaceWith, path)
+    case (l: Split, r, true :: t) => Split(l.replace(replaceWith, t), r, path)
+    case (l, r: Split, false :: t) => Split(l, r.replace(replaceWith, t), path)
+    case _ => throw RuntimeException("Error in pathing")
+  }
+
+  def getLeft(middlePath: List[Boolean]): Option[Leaf] = middlePath match {
+    case p if p.forall(_ == true) => None
+    case p =>
+      val stripped = (true :: p.reverse.dropWhile(_ == true).tail).reverse
+      getFromPath(stripped) match {
+        case l: Leaf => Some(l)
+        case p: Split => Some(p.getRightMost)
+      }
+  }
+
+  def getRight(middlePath: List[Boolean]): Option[Leaf] = middlePath match {
+    case p if p.forall(_ == false) => None
+    case p =>
+      val stripped = (false :: p.reverse.dropWhile(_ == false).tail).reverse
+      getFromPath(stripped) match {
+        case l: Leaf => Some(l)
+        case p: Split => Some(p.getLeftMost)
+      }
+  }
+
+  @tailrec
+  private def getLeftMost: Leaf = this.left match {
+    case l: Leaf => l
+    case p: Split => p.getLeftMost
+  }
+
+  @tailrec
+  private def getRightMost: Leaf = this.right match {
+    case l: Leaf => l
+    case p: Split => p.getRightMost
+  }
+}
+
+object Leaf {
+  def fromS(string: String, path: List[Boolean] = List()): Leaf = Leaf(string.toInt, path)
+
+}
+
+object Split {
+  def fromS(string: String, path: List[Boolean] = List()): Split =
+    @tailrec
+    def split(n: Int = 0, count: Int = 0): Int = (string(n), count) match {
+      case (',', 1) => n
+      case ('[', _) => split(n + 1, count + 1)
+      case (']', _) => split(n + 1, count - 1)
+      case _ => split(n + 1, count)
+    }
+
+    val n = split()
+    val (l, r) = string.splitAt(n)
+    val l2 = l.slice(1, l.length)
+    val r2 = r.slice(1, r.length - 1)
+    val lSN = if l2.forall(_.isDigit) then Leaf.fromS(l2, path :+ true) else Split.fromS(l2, path :+ true)
+    val rSN = if r2.forall(_.isDigit) then Leaf.fromS(r2, path :+ false) else Split.fromS(r2, path :+ false)
+    Split(lSN, rSN, path)
+
+}
 
 class Day18 extends Day(18, 2021) {
 
-  def add(s1: String, s2: String): String = s"[$s1,$s2]"
+  val data: List[Split] = readData().getLines().map(s => Split.fromS(s).reduce).toList
 
-  def addAll(strings: List[String], s: String): String = strings match {
-    case Nil => s
-    case h :: t => addAll(t, add(s, h))
-  }
+  override def answer1(): Any = data.tail.foldLeft(data.head)((curr, next) => (curr + next).reduce).getMag
 
-  val singlePairPattern: Regex = """(\[\d+,\d+\])""".r
-  val numbersFromPairPattern: Regex = """\[(\d+),(\d+)\]""".r
-  val largeValuePattern: Regex = """(\d{2,})""".r
-  val anyValuePattern: Regex = """(\d+)""".r
-
-  def findExploder(s: String): Option[Regex.Match] =
-    val pairs = singlePairPattern.findAllMatchIn(s)
-
-    @tailrec
-    def loop(): Option[Regex.Match] =
-      if pairs.isEmpty then None
-      else
-        val next = pairs.next()
-        val slice = s.slice(0, next.start)
-        val brackCount = slice.count(_ == '[') - slice.count(_ == ']')
-        if brackCount > 3 then
-          Some(next)
-        else
-          loop()
-    loop()
-
-  def explode(s: String, r: Regex.Match): String =
-    val (start, end) = (r.start, r.end)
-    val exploder = s.slice(start, end)
-    val numbersFromPairPattern(nl, nr) = exploder
-    val numberToLeft = anyValuePattern.findAllMatchIn(s.slice(0, start)).toList.lastOption
-    val numberToRight = anyValuePattern.findFirstMatchIn(s.slice(end, s.length))
-    val iToLeftStart = if numberToLeft.nonEmpty then numberToLeft.get.start else 0
-    val iToLeftEnd = if numberToLeft.nonEmpty then numberToLeft.get.end else 0
-    val iToRightStart = if numberToRight.nonEmpty then end + numberToRight.get.start else s.length
-    val iToRightEnd = if numberToRight.nonEmpty then end + numberToRight.get.end else s.length
-
-    val leftBrackCount = s.slice(iToLeftStart, start).count(c => (c == '[') || (c == ']'))
-    val rightBrackCount = s.slice(end, iToRightStart).count(c => (c == '[') || (c == ']'))
-
-    val explodeToRight: Boolean = rightBrackCount < leftBrackCount
-
-    val newBracket = if explodeToRight then
-      s"0,${nr.toInt + numberToRight.get.toString().toInt}"
-    else
-      s"${nl.toInt + numberToLeft.get.toString().toInt},0"
-
-    val beforeBracket = if explodeToRight then s.slice(0, start) else s.slice(0, iToLeftStart)
-    val afterBracket = if explodeToRight then s.slice(iToRightEnd, s.length) else s.slice(end, s.length)
-
-    if explodeToRight && numberToLeft.nonEmpty then
-      val newVal = nl.toInt + numberToLeft.get.toString().toInt
-      val newBefore = beforeBracket.slice(0, iToLeftStart)
-      val newAfter = beforeBracket.slice(numberToLeft.get.end, beforeBracket.length)
-      s"$newBefore$newVal$newAfter$newBracket$afterBracket"
-    else if !explodeToRight && numberToRight.nonEmpty then
-      val newVal = nr.toInt + numberToRight.get.toString().toInt
-      val newBefore = s.slice(end, iToRightStart)
-      val newAfter = s.slice(iToRightEnd, s.length)
-      s"$beforeBracket$newBracket$newBefore$newVal$newAfter"
-    else
-      s"$beforeBracket$newBracket$afterBracket"
-
-  def findSplitter(s: String): Option[Regex.Match] = largeValuePattern.findFirstMatchIn(s) match {
-    case None => None
-    case Some(p) => Some(p)
-  }
-
-  def split(s: String,r: Regex.Match): String =
-    val (start, end) = (r.start, r.end)
-    val s1 = s.slice(0, start)
-    val s2 = s.slice(end, s.length)
-    val n = s.slice(start, end).toInt
-    s"$s1[${n / 2},${(n / 2) + 1}]$s2"
-
-
-  def getMag(s: String): Int =
-
-    def mag(st: String, r: Regex.Match) =
-      val (start, end) = (r.start, r.end)
-      val exploder = st.slice(start, end)
-      val numbersFromPairPattern(a, b) = exploder
-      a.toInt * 3 + b.toInt * 2
-
-    @tailrec
-    def loop(s: String): Int =
-      if singlePairPattern.matches(s) then mag(s, singlePairPattern.findFirstMatchIn(s).get)
-      else
-        val mat = singlePairPattern.findFirstMatchIn(s).get
-        val value = mag(s, mat)
-        val before = s.slice(0, mat.start)
-        val after = s.slice(mat.end, s.length)
-        loop(s"$before$value$after")
-
-    loop(s)
-
-  private val data: List[String] = readData(true).getLines().toList
-
-  override def answer1(): Any =
-
-    @tailrec
-    def loop(s: String): String =
-      println(s)
-      val exploder = findExploder(s)
-      if exploder.nonEmpty then loop(explode(s, exploder.get))
-      else
-        val splitter = findSplitter(s)
-        if splitter.nonEmpty then loop(split(s, splitter.get))
-        else
-          s
-
-    val s = addAll(data.tail, data.head)
-    println(s)
-    val l = loop(s)
-    println(l)
-    getMag(l)
-
-//    val s1 = "[[[[4,3],4],4],[7,[[8,4],9]]]"
-//    val s2 = "[1,1]"
-//    val s = add(s1, s2)
-//    println(loop(s))
-//    println("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]")
-
-  override def answer2(): Any = ""
+  override def answer2(): Any =
+    (for {i <- data.indices
+          j <- data.indices
+          if i != j
+          } yield (data(i) + data(j)).reduce.getMag).max
 }
