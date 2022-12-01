@@ -2,23 +2,23 @@ package aoc.aoc2021
 
 import aoc.Day
 
-type Pair = (Char, Char)
+type MyPair = (Char, Char)
 
-case class Polymer(pairs: Map[Pair, BigInt], counts: Map[Char, BigInt]) {
+case class Polymer(pairs: Map[MyPair, BigInt], counts: Map[Char, BigInt]) {
 
   def score(): BigInt = counts.maxBy(_._2)._2 - counts.minBy(_._2)._2
 
-  def update(rules: Map[Pair, (Pair, Pair)]): Polymer =
-    val splitPairs: List[(List[Pair], BigInt)] = pairs.map {
+  def update(rules: Map[MyPair, (MyPair, MyPair)]): Polymer =
+    val splitPairs: List[(List[MyPair], BigInt)] = pairs.map {
       (pair, count) =>
         val (pair1, pair2) = rules(pair)
         (List(pair1, pair2), count)
     }.toList
-    val expandPairs: List[(Pair, BigInt)] = for {
+    val expandPairs: List[(MyPair, BigInt)] = for {
       (pairList, count) <- splitPairs
       pair <- pairList
     } yield (pair, count)
-    val newPairs: Map[Pair, BigInt] = expandPairs.groupBy(_._1).map { (pairKey, pairAndCount) =>
+    val newPairs: Map[MyPair, BigInt] = expandPairs.groupBy(_._1).map { (pairKey, pairAndCount) =>
       pairKey -> pairAndCount.map(_._2).sum
     }.toMap
     val newCounts: List[(Char, BigInt)] = splitPairs.map {
@@ -42,11 +42,11 @@ class Day14 extends Day(14, 2021) {
   private val countChars: Map[Char, BigInt] = template.groupBy(identity).map { (c, s) =>
     c -> BigInt(s.length)
   }.toMap
-  private val templateMap: Map[Pair, BigInt] = (template.init zip template.tail).groupBy(identity).map {
+  private val templateMap: Map[MyPair, BigInt] = (template.init zip template.tail).groupBy(identity).map {
     (c, l) => c -> BigInt(l.size)
   }.toMap
   private val rulePattern = """([A-Z])([A-Z]) -> ([A-Z])""".r
-  private val ruleMap: Map[Pair, (Pair, Pair)] = data.slice(2, data.size).map { x =>
+  private val ruleMap: Map[MyPair, (MyPair, MyPair)] = data.slice(2, data.size).map { x =>
     val rulePattern(i1, i2, out) = x
     (i1.head, i2.head) -> ((i1.head, out.head), (out.head, i2.head))
   }.toMap

@@ -4,11 +4,9 @@ import aoc.Day
 
 class Day1 extends Day(1, 2021) {
 
-  val depths = readData().getLines().map(_.toInt).toList
+  private val depths = readData().getLines().map(_.toInt)
 
-  override def answer1(): Any = depths.tail.zip(depths.init).count{ _ > _ }
+  override def answer1(): Any = depths.sliding(2).count(l=>l.head < l(1))
 
-  override def answer2(): Any =
-    val window = depths.sliding(3).map(_.sum).toList
-    window.tail.zip(window.init).count{ _ > _ }
+  override def answer2(): Any = depths.sliding(3).map(_.sum).sliding(2).count(l=>l.head < l(1))
 }
