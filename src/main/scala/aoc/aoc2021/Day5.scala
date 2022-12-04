@@ -12,22 +12,22 @@ case class Line (x1: Int, y1: Int, x2: Int, y2: Int) {
     case (x1, y1, x2, y2) => (line(x1, x2) zip line(y1, y2)).toList
   }
 
-  def isHorVer(): Boolean = x1 == x2 || y1 == y2
+  def isHorVer: Boolean = x1 == x2 || y1 == y2
 }
 
 
 class Day5 extends Day(5, 2021) {
-  val pattern = """(\d+),(\d+) -> (\d+),(\d+)""".r
-  val data = readData().getLines().map{ s =>
+  private val pattern = """(\d+),(\d+) -> (\d+),(\d+)""".r
+  private val data = readData().getLines().map{ s =>
     val pattern(x1, y1, x2, y2) = s
     Line(x1.toInt, y1.toInt, x2.toInt, y2.toInt)
   }.toList
 
   override def answer1(): Any =
-    val lines = data.filter(_.isHorVer()).map(_.genLine()).flatten
-    lines.groupBy(identity).map((k, v) => v.size).filter(_ > 1).size
+    val lines = data.filter(_.isHorVer).flatMap(_.genLine())
+    lines.groupBy(identity).map((_, v) => v.size).filter(_ > 1).size
 
   override def answer2(): Any =
-    val lines = data.map(_.genLine()).flatten
-    lines.groupBy(identity).map((k, v) => v.size).filter(_ > 1).size
+    val lines = data.flatMap(_.genLine())
+    lines.groupBy(identity).map((_, v) => v.size).filter(_ > 1).size
 }
