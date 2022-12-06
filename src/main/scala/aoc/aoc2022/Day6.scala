@@ -5,8 +5,7 @@ import aoc.Day
 class Day6 extends Day(6, 2022) {
 
   private val raw = readData().getLines().next()
-
-  def sliding(x: Int) = x + raw.sliding(x).indexWhere(_.distinct.length == x)
+  def sliding(x: Int): Int = x + raw.sliding(x).indexWhere(_.distinct.length == x)
 
   //  1093
   override def answer1(): Any = sliding(4)
